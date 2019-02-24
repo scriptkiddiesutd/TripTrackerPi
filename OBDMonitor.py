@@ -1,5 +1,4 @@
 import obd
-import time
 import urllib.request
 import json
 import time
@@ -21,21 +20,21 @@ class InstantData:
 
 
 def create_json_object(data):
-	return "{"
-	+"\"ELAPSED_SECONDS\":" + data.elapsedSeconds + ","
-	+"\"FUEL_LEVEL\":\"" + data.fuelLevel.value.magnitude + "\","
-	+"\"FUEL_RATE\":\"" + data.fuelRate.value.magnitude + "\","
-	+"\"SPEED\":\"" + data.vehicleSpeed.value.magnitude + "\","
-	+"\"MPG\":\"" + data.instantMPG + "\","
-	+"\"RPM\":\"" + data.rpm.value.magnitude + "\""
-	"}"
+	return ("{"
+				"\"ELAPSED_SECONDS\":" + str(data.elapsedSeconds) + ","
+				"\"FUEL_LEVEL\":\"" + str(data.fuelLevel.value.magnitude) + "\","
+				#"\"FUEL_RATE\":\"" + str(data.fuelRate.value.magnitude) + "\","
+				"\"SPEED\":\"" + str(data.vehicleSpeed.value.magnitude) + "\","
+				"\"MPG\":\"" + str(data.instantMPG) + "\","
+				"\"RPM\":\"" + str(data.rpm.value.magnitude) + "\""
+				"}")
 
 
 def post_data():
 	"""Send data from OBD2 to the server"""
 	global lastIndexSent
 	if len(vehicleData) - 1 > lastIndexSent:
-		dataToSend = vehicleData[lastIndexSent + 1]  # create sub list starting where we left off
+		dataToSend = vehicleData[lastIndexSent + 1:]  # create sub list starting where we left off
 
 		# create json string
 		jsonObjects = map(create_json_object, dataToSend)
@@ -47,15 +46,15 @@ def post_data():
 		jsondata = json.dumps(body)
 		jsondataasbytes = jsondata.encode('utf-8')  # needs to be bytes
 		req.add_header('Content-Length', len(jsondataasbytes))
-		print(jsondataasbytes)
-		response = urllib.request.urlopen(req, jsondataasbytes)
+		#print(jsondataasbytes)
+		#response = urllib.request.urlopen(req, jsondataasbytes)
 		lastIndexSent = len(vehicleData) - 1
-		return response
+		#return response
 
 
 # calculate MPG of instantData at a certain index
 def calculateMPG(index):
-	fuelRateAtIndex = vehicleData[index].maf  # maf value
+	fuelRateAtIndex = vehicleData[index].maf.value.magnitude  # maf value
 	fuelRateAtIndex = fuelRateAtIndex/14.7  # lbs/s
 	fuelRateAtIndex = fuelRateAtIndex/454  # g/s
 	fuelRateAtIndex = fuelRateAtIndex*3600  # g/h
@@ -63,7 +62,7 @@ def calculateMPG(index):
 	# alternative calculation if vehicle supports fuel flow sensor
 	# fuelRateAtIndex = vehicleData[index].fuelRate.magnitude
 
-	speedAtIndex = vehicleData[index].vehicleSpeed.magnitude
+	speedAtIndex = vehicleData[index].vehicleSpeed.value.magnitude
 	return speedAtIndex / fuelRateAtIndex
 
 
@@ -102,7 +101,7 @@ while True:
 	print("MAF: " + str(vehicleData[currentIndex].maf))
 	print("Distance: " + str(calculateDistanceTraveled(currentIndex)))
 	print("MPG: " + str(calculateMPG(currentIndex)))
-	print("RPM: " + str(vehicleData[currentIndex].rpm))
+	print("RPM: " + str(vehicleData[currentIndex].rpm.value.magnitude))
 
 	elapsedSeconds += time.time() - lastQueryTime
 	currentIndex += 1
