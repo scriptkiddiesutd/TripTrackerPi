@@ -74,7 +74,7 @@ def calculateFuelRateFromIndex(index):
 
 
 def calculateFuelRate(maf):
-	fuelRateAtIndex = maf*0.0805
+	fuelRateAtIndex = maf*0.0805*connection.query(obd.commands.COMMANDED_EQUIV_RATIO)
 	return fuelRateAtIndex
 
 
