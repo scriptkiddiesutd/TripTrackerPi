@@ -8,7 +8,7 @@ URL = "https://hackutd-triptracker.herokuapp.com/trips/addtrip"
 
 # contains data from queries at a certain time
 class InstantData:
-	def __init__(self, seconds, currentFuelLevel, currentSpeed, currentMPG, rpm, maf, distDTCClear, distance, temperature, duration):
+	def __init__(self, seconds, currentFuelLevel, currentSpeed, currentMPG, rpm, maf, distDTCClear, distance, temperature, duration, EQRatio):
 		self.elapsedSeconds = seconds
 		self.fuelLevel = currentFuelLevel
 		# self.fuelRate = currentFuelRate
@@ -24,6 +24,8 @@ class InstantData:
 
 def create_json_object(data):
 	return ("{"
+	    "\"license\":\"KBG7614\","
+        "\"tripId\":\"3\"," 
 		"\"ELAPSED_SECONDS\":" + str(data.elapsedSeconds) + ","
 		"\"FUEL_LEVEL\":\"" + str(data.fuelLevel.value.magnitude) + "\","
 		#"\"FUEL_RATE\":\"" + str(data.fuelRate.value.magnitude) + "\","
@@ -34,7 +36,8 @@ def create_json_object(data):
 		"\"DISTANCE\":\"" + str(data.distance) + "\","
 		"\"DISTANCE_SINCE_DTC_CLEAR\":\"" + str(data.distDTCClear.value.magnitude) + "\","
 		"\"COOLANT_TEMP\":\"" + str(data.temperature.value.magnitude) + "\","
-		"\"DURATION\":\"" + str(data.duration.value.magnitude) + "\""
+		"\"DURATION\":\"" + str(data.duration.value.magnitude) + "\","
+                                                     
 		"}")
 
 
@@ -47,7 +50,7 @@ def post_data():
 
 			# create json string
 			jsonObjects = map(create_json_object, dataToSend)
-			body = "{\"license\":\"KBG7614\", \"tripId\":\"3\",\"points\":[" + ",".join(jsonObjects) + "]}"
+			body = "[" + ",".join(jsonObjects) + "]"
 			print("JSON body: " + body)
 
 			req = urllib.request.Request(URL)
