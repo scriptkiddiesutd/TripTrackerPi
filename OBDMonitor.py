@@ -2,6 +2,9 @@ import obd
 import time
 import urllib.request
 import json
+import time
+
+URL = "http://www.testmycode.com"
 
 
 # contains data from queries at a certain time
@@ -25,7 +28,8 @@ def create_json_object(data):
 	+"\"FUEL_LEVEL\":\"" + data.fuelLevel.value.magnitude + "\","
 	+"\"FUEL_RATE\":\"" + data.fuelRate.value.magnitude + "\","
 	+"\"SPEED\":\"" + data.vehicleSpeed.value.magnitude + "\","
-	+"\"MPG\":\"" + data.instantMPG + "\""
+	+"\"MPG\":\"" + data.instantMPG + "\","
+	+"\"RPM\":\"" + data.rpm + "\""
 	"}"
 
 
@@ -39,8 +43,7 @@ def post_data():
 		jsonObjects = map(create_json_object, dataToSend)
 		body = "[" + ",".join(jsonObjects) + "]"
 
-		url = "http://www.testmycode.com"
-		req = urllib.request.Request(url)
+		req = urllib.request.Request(URL)
 		req.add_header('Content-Type', 'application/json; charset=utf-8')
 		jsondata = json.dumps(body)
 		jsondataasbytes = jsondata.encode('utf-8')  # needs to be bytes
@@ -81,6 +84,7 @@ querySpeed = 1
 vehicleData = []
 currentIndex = 0
 elapsedSeconds = 0
+lastQueryTime = time.time()
 
 while True:
 	# ugly code is best code
@@ -97,8 +101,9 @@ while True:
 	print("MPG: " + str(calculateMPG(currentIndex)))
 	print("RPM: " + str(vehicleData[currentIndex].rpm))
 
-	elapsedSeconds += querySpeed
+	elapsedSeconds += time.time() - lastQueryTime
 	currentIndex += 1
+	lastQueryTime = time.time()
 
 	# delay
 	time.sleep(querySpeed)
