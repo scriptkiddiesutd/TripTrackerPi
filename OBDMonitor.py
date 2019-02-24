@@ -9,7 +9,7 @@ URL = "http://example.com"
 
 # contains data from queries at a certain time
 class InstantData:
-	def __init__(self, seconds, currentFuelLevel, currentFuelRate, currentSpeed, currentMPG, rpm, maf):
+	def __init__(self, seconds, currentFuelLevel, currentFuelRate, currentSpeed, currentMPG, rpm, maf, distDTCClear):
 		self.elapsedSeconds = seconds
 		self.fuelLevel = currentFuelLevel
 		self.fuelRate = currentFuelRate
@@ -17,6 +17,7 @@ class InstantData:
 		self.instantMPG = currentMPG
 		self.rpm = rpm
 		self.maf = maf
+		self.distDTCClear = distDTCClear
 
 
 def create_json_object(data):
@@ -66,8 +67,9 @@ def calculateMPG(index):
 	return speedAtIndex / fuelRateAtIndex
 
 
-def calculateAverageMPG():
-	return
+# calculates distance traveled based on delta distance since last DTC clear
+def calculateDistanceTraveled(index):
+	return vehicleData[index].distDTCClear-vehicleData[0].distDTCClear
 
 
 # obd connection setup
@@ -91,13 +93,15 @@ while True:
 	vehicleData.insert(currentIndex, InstantData(elapsedSeconds, connection.query(obd.commands.FUEL_LEVEL),
 	                                             (connection.query(obd.commands.FUEL_RATE)),
 	                                             connection.query(obd.commands.SPEED), "0",
-	                                             connection.query(obd.commands.RPM), connection.query(obd.commands.MAF)))
+	                                             connection.query(obd.commands.RPM), connection.query(obd.commands.MAF),
+	                                             connection.query(obd.commands.DISTANCE_SINCE_DTC_CLEAR)))
 
 	# print data
 	print("elapsedSeconds: " + str(vehicleData[currentIndex].elapsedSeconds))
 	print("fuelRateGPH: " + str(vehicleData[currentIndex].fuelRate))
 	print("fuelLevel: " + str(vehicleData[currentIndex].fuelLevel))
 	print("MAF: " + str(vehicleData[currentIndex].maf))
+	print("Distance: " + str(calculateDistanceTraveled(currentIndex)))
 	print("MPG: " + str(calculateMPG(currentIndex)))
 	print("RPM: " + str(vehicleData[currentIndex].rpm))
 
