@@ -21,19 +21,19 @@ class InstantData:
 
 def create_json_object(data):
 	return ("{"
-				"\"ELAPSED_SECONDS\":" + str(data.elapsedSeconds) + ","
-				"\"FUEL_LEVEL\":\"" + str(data.fuelLevel.value.magnitude) + "\","
-				#"\"FUEL_RATE\":\"" + str(data.fuelRate.value.magnitude) + "\","
-				"\"SPEED\":\"" + str(data.vehicleSpeed.value.magnitude) + "\","
-				"\"MPG\":\"" + str(data.instantMPG) + "\","
-				"\"RPM\":\"" + str(data.rpm.value.magnitude) + "\","
-				"\"MAF\":\"" + str(data.maf.value.magnitude) + "\","
-				"\"DISTANCE\":\"" + str(data.distDTCClear.value.magnitude) + "\""
-				"}")
+		"\"ELAPSED_SECONDS\":" + str(data.elapsedSeconds) + ","
+		"\"FUEL_LEVEL\":\"" + str(data.fuelLevel.value.magnitude) + "\","
+		#"\"FUEL_RATE\":\"" + str(data.fuelRate.value.magnitude) + "\","
+		"\"SPEED\":\"" + str(data.vehicleSpeed.value.magnitude) + "\","
+		"\"MPG\":\"" + str(data.instantMPG) + "\","
+		"\"RPM\":\"" + str(data.rpm.value.magnitude) + "\","
+		"\"MAF\":\"" + str(data.maf.value.magnitude) + "\","
+		"\"DISTANCE\":\"" + str(data.distDTCClear.value.magnitude) + "\""
+		"}")
 
 
 def post_data():
-	"""Send data from OBD2 to the server"""
+	"""Send data from OBD-II to the server"""
 	global lastIndexSent
 	if len(vehicleData) - 1 > lastIndexSent:
 		dataToSend = vehicleData[lastIndexSent + 1:]  # create sub list starting where we left off
