@@ -26,7 +26,9 @@ def create_json_object(data):
 				#"\"FUEL_RATE\":\"" + str(data.fuelRate.value.magnitude) + "\","
 				"\"SPEED\":\"" + str(data.vehicleSpeed.value.magnitude) + "\","
 				"\"MPG\":\"" + str(data.instantMPG) + "\","
-				"\"RPM\":\"" + str(data.rpm.value.magnitude) + "\""
+				"\"RPM\":\"" + str(data.rpm.value.magnitude) + "\","
+				"\"MAF\":\"" + str(data.maf.value.magnitude) + "\","
+				"\"DISTANCE\":\"" + str(data.distDTCClear.value.magnitude) + "\""
 				"}")
 
 
