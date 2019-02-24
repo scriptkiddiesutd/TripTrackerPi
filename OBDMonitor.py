@@ -1,6 +1,7 @@
 import obd
 import urllib.request
 import json
+import requests
 import time
 
 URL = "https://hackutd-triptracker.herokuapp.com/trips/addtrip"
@@ -8,7 +9,7 @@ URL = "https://hackutd-triptracker.herokuapp.com/trips/addtrip"
 
 # contains data from queries at a certain time
 class InstantData:
-	def __init__(self, seconds, currentFuelLevel, currentSpeed, currentMPG, rpm, maf, distDTCClear, distance, temperature, duration, EQRatio):
+	def __init__(self, seconds, currentFuelLevel, currentSpeed, currentMPG, rpm, maf, distDTCClear, distance, temperature, duration):
 		self.elapsedSeconds = seconds
 		self.fuelLevel = currentFuelLevel
 		# self.fuelRate = currentFuelRate
@@ -24,9 +25,9 @@ class InstantData:
 
 def create_json_object(data):
 	return ("{"
-	    "\"license\":\"KBG7614\","
-        "\"tripId\":\"3\"," 
-		"\"ELAPSED_SECONDS\":" + str(data.elapsedSeconds) + ","
+		"\"license\":\"KBG7614\","
+		"\"tripId\":\"3\"," 
+		"\"ELAPSED_SECONDS\":\"" + str(data.elapsedSeconds) + "\","
 		"\"FUEL_LEVEL\":\"" + str(data.fuelLevel.value.magnitude) + "\","
 		#"\"FUEL_RATE\":\"" + str(data.fuelRate.value.magnitude) + "\","
 		"\"SPEED\":\"" + str(data.vehicleSpeed.value.magnitude) + "\","
@@ -36,32 +37,38 @@ def create_json_object(data):
 		"\"DISTANCE\":\"" + str(data.distance) + "\","
 		"\"DISTANCE_SINCE_DTC_CLEAR\":\"" + str(data.distDTCClear.value.magnitude) + "\","
 		"\"COOLANT_TEMP\":\"" + str(data.temperature.value.magnitude) + "\","
-		"\"DURATION\":\"" + str(data.duration.value.magnitude) + "\","
-                                                     
+		"\"DURATION\":\"" + str(data.duration.value.magnitude) + "\""
 		"}")
 
 
 def post_data():
+
 	"""Send data from OBD-II to the server"""
+
 	global lastIndexSent
+
 	try:
+
 		if len(vehicleData) - 1 > lastIndexSent:
+
 			dataToSend = vehicleData[lastIndexSent + 1:]  # create sub list starting where we left off
 
 			# create json string
+
 			jsonObjects = map(create_json_object, dataToSend)
+
 			body = "[" + ",".join(jsonObjects) + "]"
+
 			print("JSON body: " + body)
 
-			req = urllib.request.Request(URL)
-			req.add_header('Content-Type', 'application/json; charset=utf-8')
-			jsondata = json.dumps(body)
-			jsondataasbytes = jsondata.encode('utf-8')  # needs to be bytes
-			req.add_header('Content-Length', len(jsondataasbytes))
-			#print(jsondataasbytes)
+			headers = {'content-type': 'application/json'}
+			r = requests.post(URL, data=body, headers=headers)
+
+			print(r.content)
+
 			#response = urllib.request.urlopen(req, jsondataasbytes)
+
 			lastIndexSent = len(vehicleData) - 1
-			#return response
 	except:
 		print("An error occurred while creating and sending post request")
 
@@ -77,7 +84,7 @@ def calculateFuelRateFromIndex(index):
 
 
 def calculateFuelRate(maf):
-	fuelRateAtIndex = maf*0.0805*connection.query(obd.commands.COMMANDED_EQUIV_RATIO)
+	fuelRateAtIndex = maf*0.0805*connection.query(obd.commands.COMMANDED_EQUIV_RATIO).value.magnitude
 	return fuelRateAtIndex
 
 
@@ -125,7 +132,7 @@ firstDTCSeen = connection.query(obd.commands.DISTANCE_SINCE_DTC_CLEAR)
 
 while True:
 	# only logs data if rpm > 10
-	if connection.query(obd.commands.RPM.value.magnitude) > 10:
+	if connection.query(obd.commands.RPM).value.magnitude > 10:
 		# ugly code is best code
 		speed = connection.query(obd.commands.SPEED)
 		maf = connection.query(obd.commands.MAF)
@@ -143,7 +150,7 @@ while True:
 		# print("fuelRateGPH: " + str(vehicleData[currentIndex].fuelRate))
 		print("fuelLevel: " + str(vehicleData[currentIndex].fuelLevel))
 		print("MAF: " + str(vehicleData[currentIndex].maf))
-		print("Distance: " + str(calculateDistanceTraveled()))
+		print("Distance: " + str(calculateDistanceTraveled(totalDistance)))
 		print("MPG: " + str(calculateMPGFromIndex(currentIndex)))
 		print("RPM: " + str(vehicleData[currentIndex].rpm.value.magnitude))
 
