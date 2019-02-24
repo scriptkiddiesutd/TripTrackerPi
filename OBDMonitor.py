@@ -4,7 +4,7 @@ import urllib.request
 import json
 import time
 
-URL = "http://www.testmycode.com"
+URL = "http://example.com"
 
 
 # contains data from queries at a certain time
@@ -19,9 +19,6 @@ class InstantData:
 		self.maf = maf
 
 
-lastIndexSent = 0
-
-
 def create_json_object(data):
 	return "{"
 	+"\"ELAPSED_SECONDS\":" + data.elapsedSeconds + ","
@@ -29,7 +26,7 @@ def create_json_object(data):
 	+"\"FUEL_RATE\":\"" + data.fuelRate.value.magnitude + "\","
 	+"\"SPEED\":\"" + data.vehicleSpeed.value.magnitude + "\","
 	+"\"MPG\":\"" + data.instantMPG + "\","
-	+"\"RPM\":\"" + data.rpm + "\""
+	+"\"RPM\":\"" + data.rpm.value.magnitude + "\""
 	"}"
 
 
@@ -42,13 +39,14 @@ def post_data():
 		# create json string
 		jsonObjects = map(create_json_object, dataToSend)
 		body = "[" + ",".join(jsonObjects) + "]"
+		print("JSON body: " + body)
 
 		req = urllib.request.Request(URL)
 		req.add_header('Content-Type', 'application/json; charset=utf-8')
 		jsondata = json.dumps(body)
 		jsondataasbytes = jsondata.encode('utf-8')  # needs to be bytes
 		req.add_header('Content-Length', len(jsondataasbytes))
-		# print (jsondataasbytes)
+		print(jsondataasbytes)
 		response = urllib.request.urlopen(req, jsondataasbytes)
 		lastIndexSent = len(vehicleData) - 1
 		return response
@@ -80,6 +78,8 @@ print(obd.commands.has_command(obd.commands.SPEED))
 # sets the amount of seconds between queries
 querySpeed = 1
 
+lastIndexSent = 0
+
 # dataset variables
 vehicleData = []
 currentIndex = 0
@@ -104,6 +104,10 @@ while True:
 	elapsedSeconds += time.time() - lastQueryTime
 	currentIndex += 1
 	lastQueryTime = time.time()
+
+	# every 5th iteration, send the data to the server
+	if currentIndex - lastIndexSent >= 5:
+		post_data()
 
 	# delay
 	time.sleep(querySpeed)
