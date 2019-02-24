@@ -6,13 +6,14 @@ import json
 
 # contains data from queries at a certain time
 class InstantData:
-	def __init__(self, seconds, currentFuelLevel, currentFuelRate, currentSpeed, currentMPG, rpm):
+	def __init__(self, seconds, currentFuelLevel, currentFuelRate, currentSpeed, currentMPG, rpm, maf):
 		self.elapsedSeconds = seconds
 		self.fuelLevel = currentFuelLevel
 		self.fuelRate = currentFuelRate
 		self.vehicleSpeed = currentSpeed
 		self.instantMPG = currentMPG
 		self.rpm = rpm
+		self.maf = maf
 
 
 lastIndexSent = 0
@@ -31,8 +32,8 @@ def create_json_object(data):
 def post_data():
 	"""Send data from OBD2 to the server"""
 	global lastIndexSent
-	if len(vehicleData) -1 > lastIndexSent:
-		dataToSend = vehicleData[lastIndexSent+1] # create sub list starting where we left off
+	if len(vehicleData) - 1 > lastIndexSent:
+		dataToSend = vehicleData[lastIndexSent + 1]  # create sub list starting where we left off
 
 		# create json string
 		jsonObjects = map(create_json_object, dataToSend)
@@ -42,9 +43,9 @@ def post_data():
 		req = urllib.request.Request(url)
 		req.add_header('Content-Type', 'application/json; charset=utf-8')
 		jsondata = json.dumps(body)
-		jsondataasbytes = jsondata.encode('utf-8')   # needs to be bytes
+		jsondataasbytes = jsondata.encode('utf-8')  # needs to be bytes
 		req.add_header('Content-Length', len(jsondataasbytes))
-		#print (jsondataasbytes)
+		# print (jsondataasbytes)
 		response = urllib.request.urlopen(req, jsondataasbytes)
 		lastIndexSent = len(vehicleData) - 1
 		return response
@@ -52,18 +53,25 @@ def post_data():
 
 # calculate MPG of instantData at a certain index
 def calculateMPG(index):
-	fuelRateAtIndex = vehicleData[index].fuelRate.magnitude
+	fuelRateAtIndex = vehicleData[index].maf  # maf value
+	fuelRateAtIndex = fuelRateAtIndex/14.7  # lbs/s
+	fuelRateAtIndex = fuelRateAtIndex/454  # g/s
+	fuelRateAtIndex = fuelRateAtIndex*3600  # g/h
+
+	# alternative calculation if vehicle supports fuel flow sensor
+	# fuelRateAtIndex = vehicleData[index].fuelRate.magnitude
+
 	speedAtIndex = vehicleData[index].vehicleSpeed.magnitude
-	return speedAtIndex/fuelRateAtIndex
+	return speedAtIndex / fuelRateAtIndex
 
 
 def calculateAverageMPG():
-
 	return
+
 
 # obd connection setup
 connection = obd.OBD()  # auto-connects to USB or RF port
-#cmd = obd.commands.SPEED  # select an OBD command (sensor)
+# cmd = obd.commands.SPEED  # select an OBD command (sensor)
 print(obd.commands.has_command(obd.commands.SPEED))
 
 # sets the amount of seconds between queries
@@ -75,16 +83,18 @@ currentIndex = 0
 elapsedSeconds = 0
 
 while True:
-
 	# ugly code is best code
 	vehicleData.insert(currentIndex, InstantData(elapsedSeconds, connection.query(obd.commands.FUEL_LEVEL),
-		(connection.query(obd.commands.FUEL_RATE)), connection.query(obd.commands.SPEED), "0", connection.query(obd.commands.RPM)))
+	                                             (connection.query(obd.commands.FUEL_RATE)),
+	                                             connection.query(obd.commands.SPEED), "0",
+	                                             connection.query(obd.commands.RPM)))
 
 	# print data
 	print("elapsedSeconds: " + str(vehicleData[currentIndex].elapsedSeconds))
 	print("fuelRateGPH: " + str(vehicleData[currentIndex].fuelRate))
 	print("fuelLevel: " + str(vehicleData[currentIndex].fuelLevel))
-	#print("MPG: " + str(calculateMPG(currentIndex)))
+	print("MAF: " + str(vehicleData[currentIndex].maf))
+	print("MPG: " + str(calculateMPG(currentIndex)))
 	print("RPM: " + str(vehicleData[currentIndex].rpm))
 
 	elapsedSeconds += querySpeed
