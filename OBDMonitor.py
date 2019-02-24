@@ -1,6 +1,7 @@
 import obd
 import time
 
+
 # contains data from queries at a certain time
 class InstantData:
 	def __init__(self, seconds, currentFuelLevel, currentFuelRate, currentSpeed, currentMPG):
@@ -9,6 +10,13 @@ class InstantData:
 		self.fuelRateGPH = currentFuelRate
 		self.vehicleSpeed = currentSpeed
 		self.instantMPG = currentMPG
+
+
+# calculate MPG of instantData at a certain index
+def calculateMPG(index):
+	fuelRateAtIndex = vehicleData[index].fuelRate
+	speedAtIndex = vehicleData[index].vehicleSpeed
+	return speedAtIndex/fuelRateAtIndex
 
 
 # obd connection setup
@@ -25,13 +33,15 @@ elapsedSeconds = 0
 
 while True:
 
-	vehicleData.insert(currentIndex, InstantData(elapsedSeconds, connection.query("FUEL_LEVEL"), connection.query("FUEL_RATE"), connection.query("SPEED")))
+	# ugly code is best code
+	vehicleData.insert(currentIndex, InstantData(elapsedSeconds, connection.query("FUEL_LEVEL"),
+		(connection.query("FUEL_RATE")).value.to("gph"), (connection.query("SPEED").value.to("mph"))))
 
 	# print data
 	print("elapsedSeconds: " + vehicleData[currentIndex].elapsedSeconds)
-	print("fuelRateLPH: " + vehicleData[currentIndex].fuelRateGPH)
-	print("fuelRateGPH: " + vehicleData[currentIndex].fuelRateGPH.value.to("gph"))
+	print("fuelRateGPH: " + vehicleData[currentIndex].fuelRateGPH)
 	print("fuelLevel: " + vehicleData[currentIndex].fuelLevel)
+	print("MPG: " + calculateMPG(currentIndex))
 
 	elapsedSeconds += querySpeed
 	currentIndex += 1
