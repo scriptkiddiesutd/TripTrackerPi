@@ -8,7 +8,7 @@ URL = "http://trip-tracker.net/trips/updateTrip"
 
 # contains data from queries at a certain time
 class InstantData:
-	def __init__(self, seconds, currentFuelLevel, currentSpeed, currentMPG, rpm, maf, distDTCClear, temperature):
+	def __init__(self, seconds, currentFuelLevel, currentSpeed, currentMPG, rpm, maf, distDTCClear, temperature, duration):
 		self.elapsedSeconds = seconds
 		self.fuelLevel = currentFuelLevel
 		# self.fuelRate = currentFuelRate
@@ -18,6 +18,7 @@ class InstantData:
 		self.maf = maf
 		self.distDTCClear = distDTCClear
 		self.temperature = temperature
+		self.duration = duration
 
 
 def create_json_object(data):
@@ -126,7 +127,8 @@ while True:
 		                                             speed, calculateMPG(maf.value.magnitude, speed.value.magnitude),
 		                                             connection.query(obd.commands.RPM), maf,
 		                                             connection.query(obd.commands.DISTANCE_SINCE_DTC_CLEAR),
-		                                             connection.query(obd.commands.COOLANT_TEMP)))
+		                                             connection.query(obd.commands.COOLANT_TEMP),
+		                                             connection.query(obd.commands.RUN_TIME)))
 
 		# print data
 		print("elapsedSeconds: " + str(vehicleData[currentIndex].elapsedSeconds))
