@@ -7,7 +7,7 @@ class InstantData:
 	def __init__(self, seconds, currentFuelLevel, currentFuelRate, currentSpeed, currentMPG):
 		self.elapsedSeconds = seconds
 		self.fuelLevel = currentFuelLevel
-		self.fuelRateGPH = currentFuelRate
+		self.fuelRate = currentFuelRate
 		self.vehicleSpeed = currentSpeed
 		self.instantMPG = currentMPG
 
@@ -17,6 +17,11 @@ def calculateMPG(index):
 	fuelRateAtIndex = vehicleData[index].fuelRate
 	speedAtIndex = vehicleData[index].vehicleSpeed
 	return speedAtIndex/fuelRateAtIndex
+
+
+def calculateAverageMPG():
+
+	return
 
 
 # obd connection setup
@@ -39,7 +44,7 @@ while True:
 
 	# print data
 	print("elapsedSeconds: " + vehicleData[currentIndex].elapsedSeconds)
-	print("fuelRateGPH: " + vehicleData[currentIndex].fuelRateGPH)
+	print("fuelRateGPH: " + vehicleData[currentIndex].fuelRate)
 	print("fuelLevel: " + vehicleData[currentIndex].fuelLevel)
 	print("MPG: " + calculateMPG(currentIndex))
 
