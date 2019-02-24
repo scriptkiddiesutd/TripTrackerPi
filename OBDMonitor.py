@@ -9,10 +9,10 @@ URL = "http://example.com"
 
 # contains data from queries at a certain time
 class InstantData:
-	def __init__(self, seconds, currentFuelLevel, currentFuelRate, currentSpeed, currentMPG, rpm, maf, distDTCClear):
+	def __init__(self, seconds, currentFuelLevel, currentSpeed, currentMPG, rpm, maf, distDTCClear):
 		self.elapsedSeconds = seconds
 		self.fuelLevel = currentFuelLevel
-		self.fuelRate = currentFuelRate
+		# self.fuelRate = currentFuelRate
 		self.vehicleSpeed = currentSpeed
 		self.instantMPG = currentMPG
 		self.rpm = rpm
@@ -91,14 +91,13 @@ lastQueryTime = time.time()
 while True:
 	# ugly code is best code
 	vehicleData.insert(currentIndex, InstantData(elapsedSeconds, connection.query(obd.commands.FUEL_LEVEL),
-	                                             (connection.query(obd.commands.FUEL_RATE)),
 	                                             connection.query(obd.commands.SPEED), "0",
 	                                             connection.query(obd.commands.RPM), connection.query(obd.commands.MAF),
 	                                             connection.query(obd.commands.DISTANCE_SINCE_DTC_CLEAR)))
 
 	# print data
 	print("elapsedSeconds: " + str(vehicleData[currentIndex].elapsedSeconds))
-	print("fuelRateGPH: " + str(vehicleData[currentIndex].fuelRate))
+	# print("fuelRateGPH: " + str(vehicleData[currentIndex].fuelRate))
 	print("fuelLevel: " + str(vehicleData[currentIndex].fuelLevel))
 	print("MAF: " + str(vehicleData[currentIndex].maf))
 	print("Distance: " + str(calculateDistanceTraveled(currentIndex)))
