@@ -3,7 +3,7 @@ import urllib.request
 import json
 import time
 
-URL = "http://trip-tracker.net/trips/updateTrip"
+URL = "https://hackutd-triptracker.herokuapp.com/trips/addtrip"
 
 
 # contains data from queries at a certain time
