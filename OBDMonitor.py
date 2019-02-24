@@ -35,7 +35,7 @@ def create_json_object(data):
 		"\"RPM\":\"" + str(data.rpm.value.magnitude) + "\","
 		"\"MAF\":\"" + str(data.maf.value.magnitude) + "\","
 		"\"DISTANCE\":\"" + str(data.distance) + "\","
-		"\"DISTANCE_SINCE_DTC_CLEAR\":\"" + str(data.distDTCClear.value.magnitude) + "\","
+		"\"DISTANCE_SINCE_DTC_CLEAR\":\"" + str(data.distDTCClear.magnitude) + "\","
 		"\"COOLANT_TEMP\":\"" + str(data.temperature.value.magnitude) + "\","
 		"\"DURATION\":\"" + str(data.duration.value.magnitude) + "\""
 		"}")
@@ -110,7 +110,7 @@ def calculateMPG(maf, speed):
 
 # calculates distance traveled based on delta distance since last DTC clear
 def calculateDistanceTraveled(currentDistance):
-	return currentDistance.value.magnitude-firstDTCSeen.value.magnitude
+	return currentDistance.magnitude-firstDTCSeen.magnitude
 
 
 # obd connection setup
@@ -128,7 +128,7 @@ vehicleData = []
 currentIndex = 0
 elapsedSeconds = 0
 lastQueryTime = time.time()
-firstDTCSeen = connection.query(obd.commands.DISTANCE_SINCE_DTC_CLEAR)
+firstDTCSeen = connection.query(obd.commands.DISTANCE_SINCE_DTC_CLEAR).value.to('mi')
 
 while True:
 	# only logs data if rpm > 10
@@ -136,7 +136,7 @@ while True:
 		# ugly code is best code
 		speed = connection.query(obd.commands.SPEED).value.to('mph')
 		maf = connection.query(obd.commands.MAF)
-		totalDistance = connection.query(obd.commands.DISTANCE_SINCE_DTC_CLEAR)
+		totalDistance = connection.query(obd.commands.DISTANCE_SINCE_DTC_CLEAR).value.to('mi')
 		vehicleData.insert(currentIndex, InstantData(elapsedSeconds, connection.query(obd.commands.FUEL_LEVEL),
 		                                             speed, calculateMPG(maf.value.magnitude, speed.magnitude),
 		                                             connection.query(obd.commands.RPM), maf,
