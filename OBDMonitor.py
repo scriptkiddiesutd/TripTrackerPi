@@ -8,7 +8,7 @@ URL = "http://trip-tracker.net/trips/updateTrip"
 
 # contains data from queries at a certain time
 class InstantData:
-	def __init__(self, seconds, currentFuelLevel, currentSpeed, currentMPG, rpm, maf, distDTCClear, temperature, duration):
+	def __init__(self, seconds, currentFuelLevel, currentSpeed, currentMPG, rpm, maf, distDTCClear, distance, temperature, duration):
 		self.elapsedSeconds = seconds
 		self.fuelLevel = currentFuelLevel
 		# self.fuelRate = currentFuelRate
@@ -17,6 +17,7 @@ class InstantData:
 		self.rpm = rpm
 		self.maf = maf
 		self.distDTCClear = distDTCClear
+		self.distance = distance
 		self.temperature = temperature
 		self.duration = duration
 
@@ -30,8 +31,10 @@ def create_json_object(data):
 		"\"MPG\":\"" + str(data.instantMPG) + "\","
 		"\"RPM\":\"" + str(data.rpm.value.magnitude) + "\","
 		"\"MAF\":\"" + str(data.maf.value.magnitude) + "\","
-		"\"DISTANCE\":\"" + str(data.distDTCClear.value.magnitude) + "\","
-		"\"COOLANT_TEMP\":\"" + str(data.temperature.value.magnitude) + "\""
+		"\"DISTANCE\":\"" + str(data.distance) + "\","
+		"\"DISTANCE_SINCE_DTC_CLEAR\":\"" + str(data.distDTCClear.value.magnitude) + "\","
+		"\"COOLANT_TEMP\":\"" + str(data.temperature.value.magnitude) + "\","
+		"\"DURATION\":\"" + str(data.duration.value.magnitude) + "\""
 		"}")
 
 
@@ -96,8 +99,8 @@ def calculateMPG(maf, speed):
 
 
 # calculates distance traveled based on delta distance since last DTC clear
-def calculateDistanceTraveled():
-	return vehicleData[-1].distDTCClear.value.magnitude-firstDTCSeen
+def calculateDistanceTraveled(currentDistance):
+	return currentDistance.value.magnitude-firstDTCSeen.value.magnitude
 
 
 # obd connection setup
@@ -123,10 +126,12 @@ while True:
 		# ugly code is best code
 		speed = connection.query(obd.commands.SPEED)
 		maf = connection.query(obd.commands.MAF)
+		totalDistance = connection.query(obd.commands.DISTANCE_SINCE_DTC_CLEAR)
 		vehicleData.insert(currentIndex, InstantData(elapsedSeconds, connection.query(obd.commands.FUEL_LEVEL),
 		                                             speed, calculateMPG(maf.value.magnitude, speed.value.magnitude),
 		                                             connection.query(obd.commands.RPM), maf,
-		                                             connection.query(obd.commands.DISTANCE_SINCE_DTC_CLEAR),
+		                                             totalDistance,
+		                                             calculateDistanceTraveled(totalDistance),
 		                                             connection.query(obd.commands.COOLANT_TEMP),
 		                                             connection.query(obd.commands.RUN_TIME)))
 
