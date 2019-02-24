@@ -3,7 +3,7 @@ import urllib.request
 import json
 import time
 
-URL = "http://example.com"
+URL = "http://trip-tracker.net/trips/updateTrip"
 
 
 # contains data from queries at a certain time
@@ -20,7 +20,7 @@ class InstantData:
 
 
 def create_json_object(data):
-	return ("{"
+	return ("{\"license\":\"KBG7614\", \"tripId\":\"3\",\"newPoints\":["
 		"\"ELAPSED_SECONDS\":" + str(data.elapsedSeconds) + ","
 		"\"FUEL_LEVEL\":\"" + str(data.fuelLevel.value.magnitude) + "\","
 		#"\"FUEL_RATE\":\"" + str(data.fuelRate.value.magnitude) + "\","
@@ -29,33 +29,36 @@ def create_json_object(data):
 		"\"RPM\":\"" + str(data.rpm.value.magnitude) + "\","
 		"\"MAF\":\"" + str(data.maf.value.magnitude) + "\","
 		"\"DISTANCE\":\"" + str(data.distDTCClear.value.magnitude) + "\""
-		"}")
+		"]}")
 
 
 def post_data():
 	"""Send data from OBD-II to the server"""
 	global lastIndexSent
-	if len(vehicleData) - 1 > lastIndexSent:
-		dataToSend = vehicleData[lastIndexSent + 1:]  # create sub list starting where we left off
+	try:
+		if len(vehicleData) - 1 > lastIndexSent:
+			dataToSend = vehicleData[lastIndexSent + 1:]  # create sub list starting where we left off
 
-		# create json string
-		jsonObjects = map(create_json_object, dataToSend)
-		body = "[" + ",".join(jsonObjects) + "]"
-		print("JSON body: " + body)
+			# create json string
+			jsonObjects = map(create_json_object, dataToSend)
+			body = "[" + ",".join(jsonObjects) + "]"
+			print("JSON body: " + body)
 
-		req = urllib.request.Request(URL)
-		req.add_header('Content-Type', 'application/json; charset=utf-8')
-		jsondata = json.dumps(body)
-		jsondataasbytes = jsondata.encode('utf-8')  # needs to be bytes
-		req.add_header('Content-Length', len(jsondataasbytes))
-		#print(jsondataasbytes)
-		#response = urllib.request.urlopen(req, jsondataasbytes)
-		lastIndexSent = len(vehicleData) - 1
-		#return response
+			req = urllib.request.Request(URL)
+			req.add_header('Content-Type', 'application/json; charset=utf-8')
+			jsondata = json.dumps(body)
+			jsondataasbytes = jsondata.encode('utf-8')  # needs to be bytes
+			req.add_header('Content-Length', len(jsondataasbytes))
+			#print(jsondataasbytes)
+			#response = urllib.request.urlopen(req, jsondataasbytes)
+			lastIndexSent = len(vehicleData) - 1
+			#return response
+	except:
+		print("An error occurred while creating and sending post request")
 
 
 # calculate fuel rate
-def calculateFuelRate(index):
+def calculateFuelRateFromIndex(index):
 	fuelRateAtIndex = vehicleData[index].maf.value.magnitude  # maf value
 	# fuelRateAtIndex = fuelRateAtIndex/14.7  # lbs/s
 	# fuelRateAtIndex = fuelRateAtIndex/454  # g/s
@@ -64,9 +67,14 @@ def calculateFuelRate(index):
 	return fuelRateAtIndex
 
 
+def calculateFuelRate(maf):
+	fuelRateAtIndex = maf*0.0805
+	return fuelRateAtIndex
+
+
 # calculate MPG of instantData at a certain index
-def calculateMPG(index):
-	fuelRateAtIndex = calculateFuelRate(index)
+def calculateMPGFromIndex(index):
+	fuelRateAtIndex = calculateFuelRateFromIndex(index)
 	# alternative calculation if vehicle supports fuel flow sensor
 	# fuelRateAtIndex = vehicleData[index].fuelRate.magnitude
 
@@ -74,9 +82,19 @@ def calculateMPG(index):
 	return speedAtIndex / fuelRateAtIndex
 
 
+# calculate MPG of instantData at a certain index
+def calculateMPG(maf, speed):
+	fuelRateAtIndex = calculateFuelRate(maf)
+	# alternative calculation if vehicle supports fuel flow sensor
+	# fuelRateAtIndex = vehicleData[index].fuelRate.magnitude
+
+	#speedAtIndex = vehicleData[index].vehicleSpeed.value.magnitude
+	return speed / fuelRateAtIndex
+
+
 # calculates distance traveled based on delta distance since last DTC clear
 def calculateDistanceTraveled(index):
-	return vehicleData[index].distDTCClear-vehicleData[0].distDTCClear
+	return vehicleData[index].distDTCClear.value.magnitude-vehicleData[0].distDTCClear.value.magnitude
 
 
 # obd connection setup
@@ -97,9 +115,11 @@ lastQueryTime = time.time()
 
 while True:
 	# ugly code is best code
+	speed = connection.query(obd.commands.SPEED)
+	maf = connection.query(obd.commands.MAF)
 	vehicleData.insert(currentIndex, InstantData(elapsedSeconds, connection.query(obd.commands.FUEL_LEVEL),
-	                                             connection.query(obd.commands.SPEED), "0",
-	                                             connection.query(obd.commands.RPM), connection.query(obd.commands.MAF),
+	                                             speed, calculateMPG(maf.value.magnitude, speed.value.magnitude),
+	                                             connection.query(obd.commands.RPM), maf,
 	                                             connection.query(obd.commands.DISTANCE_SINCE_DTC_CLEAR)))
 
 	# print data
@@ -108,7 +128,7 @@ while True:
 	print("fuelLevel: " + str(vehicleData[currentIndex].fuelLevel))
 	print("MAF: " + str(vehicleData[currentIndex].maf))
 	print("Distance: " + str(calculateDistanceTraveled(currentIndex)))
-	print("MPG: " + str(calculateMPG(currentIndex)))
+	print("MPG: " + str(calculateMPGFromIndex(currentIndex)))
 	print("RPM: " + str(vehicleData[currentIndex].rpm.value.magnitude))
 
 	elapsedSeconds += time.time() - lastQueryTime
