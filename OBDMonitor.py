@@ -14,7 +14,9 @@ class InstantData:
 		self.instantMPG = currentMPG
 		self.rpm = rpm
 
+
 lastIndexSent = 0
+
 
 def create_json_object(data):
 	return "{"
@@ -25,9 +27,11 @@ def create_json_object(data):
 	+"\"MPG\":\"" + data.instantMPG + "\""
 	"}"
 
+
 def post_data():
 	"""Send data from OBD2 to the server"""
-	if (len(vehicleData) -1 > lastIndexSent):
+	global lastIndexSent
+	if len(vehicleData) -1 > lastIndexSent:
 		dataToSend = vehicleData[lastIndexSent+1] # create sub list starting where we left off
 
 		# create json string
