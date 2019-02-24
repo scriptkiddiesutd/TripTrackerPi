@@ -54,13 +54,19 @@ def post_data():
 		#return response
 
 
+# calculate fuel rate
+def calculateFuelRate(index):
+	fuelRateAtIndex = vehicleData[index].maf.value.magnitude  # maf value
+	# fuelRateAtIndex = fuelRateAtIndex/14.7  # lbs/s
+	# fuelRateAtIndex = fuelRateAtIndex/454  # g/s
+	# fuelRateAtIndex = fuelRateAtIndex*3600  # g/h
+	fuelRateAtIndex = fuelRateAtIndex*0.0805
+	return fuelRateAtIndex
+
+
 # calculate MPG of instantData at a certain index
 def calculateMPG(index):
-	fuelRateAtIndex = vehicleData[index].maf.value.magnitude  # maf value
-	fuelRateAtIndex = fuelRateAtIndex/14.7  # lbs/s
-	fuelRateAtIndex = fuelRateAtIndex/454  # g/s
-	fuelRateAtIndex = fuelRateAtIndex*3600  # g/h
-
+	fuelRateAtIndex = calculateFuelRate(index)
 	# alternative calculation if vehicle supports fuel flow sensor
 	# fuelRateAtIndex = vehicleData[index].fuelRate.magnitude
 
