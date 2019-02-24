@@ -30,7 +30,7 @@ def create_json_object(data):
 		"\"ELAPSED_SECONDS\":\"" + str(data.elapsedSeconds) + "\","
 		"\"FUEL_LEVEL\":\"" + str(data.fuelLevel.value.magnitude) + "\","
 		#"\"FUEL_RATE\":\"" + str(data.fuelRate.value.magnitude) + "\","
-		"\"SPEED\":\"" + str(data.vehicleSpeed.value.magnitude) + "\","
+		"\"SPEED\":\"" + str(data.vehicleSpeed.magnitude) + "\","
 		"\"MPG\":\"" + str(data.instantMPG) + "\","
 		"\"RPM\":\"" + str(data.rpm.value.magnitude) + "\","
 		"\"MAF\":\"" + str(data.maf.value.magnitude) + "\","
@@ -94,7 +94,7 @@ def calculateMPGFromIndex(index):
 	# alternative calculation if vehicle supports fuel flow sensor
 	# fuelRateAtIndex = vehicleData[index].fuelRate.magnitude
 
-	speedAtIndex = vehicleData[index].vehicleSpeed.value.magnitude
+	speedAtIndex = vehicleData[index].vehicleSpeed.magnitude
 	return speedAtIndex / fuelRateAtIndex
 
 
@@ -134,11 +134,11 @@ while True:
 	# only logs data if rpm > 10
 	if connection.query(obd.commands.RPM).value.magnitude > 10:
 		# ugly code is best code
-		speed = connection.query(obd.commands.SPEED)
+		speed = connection.query(obd.commands.SPEED).value.to('mph')
 		maf = connection.query(obd.commands.MAF)
 		totalDistance = connection.query(obd.commands.DISTANCE_SINCE_DTC_CLEAR)
 		vehicleData.insert(currentIndex, InstantData(elapsedSeconds, connection.query(obd.commands.FUEL_LEVEL),
-		                                             speed, calculateMPG(maf.value.magnitude, speed.value.magnitude),
+		                                             speed, calculateMPG(maf.value.magnitude, speed.magnitude),
 		                                             connection.query(obd.commands.RPM), maf,
 		                                             totalDistance,
 		                                             calculateDistanceTraveled(totalDistance),
