@@ -8,7 +8,7 @@ URL = "http://trip-tracker.net/trips/updateTrip"
 
 # contains data from queries at a certain time
 class InstantData:
-	def __init__(self, seconds, currentFuelLevel, currentSpeed, currentMPG, rpm, maf, distDTCClear):
+	def __init__(self, seconds, currentFuelLevel, currentSpeed, currentMPG, rpm, maf, distDTCClear, temperature):
 		self.elapsedSeconds = seconds
 		self.fuelLevel = currentFuelLevel
 		# self.fuelRate = currentFuelRate
@@ -17,10 +17,11 @@ class InstantData:
 		self.rpm = rpm
 		self.maf = maf
 		self.distDTCClear = distDTCClear
+		self.temperature = temperature
 
 
 def create_json_object(data):
-	return ("{\"license\":\"KBG7614\", \"tripId\":\"3\",\"newPoints\":["
+	return ("{"
 		"\"ELAPSED_SECONDS\":" + str(data.elapsedSeconds) + ","
 		"\"FUEL_LEVEL\":\"" + str(data.fuelLevel.value.magnitude) + "\","
 		#"\"FUEL_RATE\":\"" + str(data.fuelRate.value.magnitude) + "\","
@@ -28,8 +29,9 @@ def create_json_object(data):
 		"\"MPG\":\"" + str(data.instantMPG) + "\","
 		"\"RPM\":\"" + str(data.rpm.value.magnitude) + "\","
 		"\"MAF\":\"" + str(data.maf.value.magnitude) + "\","
-		"\"DISTANCE\":\"" + str(data.distDTCClear.value.magnitude) + "\""
-		"]}")
+		"\"DISTANCE\":\"" + str(data.distDTCClear.value.magnitude) + "\","
+		"\"COOLANT_TEMP\":\"" + str(data.temperature.value.magnitude) + "\""
+		"}")
 
 
 def post_data():
@@ -41,7 +43,7 @@ def post_data():
 
 			# create json string
 			jsonObjects = map(create_json_object, dataToSend)
-			body = "[" + ",".join(jsonObjects) + "]"
+			body = "{\"license\":\"KBG7614\", \"tripId\":\"3\",\"points\":[" + ",".join(jsonObjects) + "]}"
 			print("JSON body: " + body)
 
 			req = urllib.request.Request(URL)
@@ -105,7 +107,7 @@ print(obd.commands.has_command(obd.commands.SPEED))
 # sets the amount of seconds between queries
 querySpeed = 1
 
-lastIndexSent = 0
+lastIndexSent = -1
 
 # dataset variables
 vehicleData = []
@@ -120,7 +122,8 @@ while True:
 	vehicleData.insert(currentIndex, InstantData(elapsedSeconds, connection.query(obd.commands.FUEL_LEVEL),
 	                                             speed, calculateMPG(maf.value.magnitude, speed.value.magnitude),
 	                                             connection.query(obd.commands.RPM), maf,
-	                                             connection.query(obd.commands.DISTANCE_SINCE_DTC_CLEAR)))
+	                                             connection.query(obd.commands.DISTANCE_SINCE_DTC_CLEAR),
+	                                             connection.query(obd.commands.COOLANT_TEMP)))
 
 	# print data
 	print("elapsedSeconds: " + str(vehicleData[currentIndex].elapsedSeconds))
