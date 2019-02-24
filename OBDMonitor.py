@@ -91,7 +91,7 @@ while True:
 	vehicleData.insert(currentIndex, InstantData(elapsedSeconds, connection.query(obd.commands.FUEL_LEVEL),
 	                                             (connection.query(obd.commands.FUEL_RATE)),
 	                                             connection.query(obd.commands.SPEED), "0",
-	                                             connection.query(obd.commands.RPM)))
+	                                             connection.query(obd.commands.RPM), connection.query(obd.commands.MAF)))
 
 	# print data
 	print("elapsedSeconds: " + str(vehicleData[currentIndex].elapsedSeconds))
