@@ -95,8 +95,8 @@ def calculateMPG(maf, speed):
 
 
 # calculates distance traveled based on delta distance since last DTC clear
-def calculateDistanceTraveled(index):
-	return vehicleData[index].distDTCClear.value.magnitude-vehicleData[0].distDTCClear.value.magnitude
+def calculateDistanceTraveled():
+	return vehicleData[-1].distDTCClear.value.magnitude-firstDTCSeen
 
 
 # obd connection setup
@@ -114,6 +114,7 @@ vehicleData = []
 currentIndex = 0
 elapsedSeconds = 0
 lastQueryTime = time.time()
+firstDTCSeen = connection.query(obd.commands.DISTANCE_SINCE_DTC_CLEAR)
 
 while True:
 	# ugly code is best code
@@ -130,7 +131,7 @@ while True:
 	# print("fuelRateGPH: " + str(vehicleData[currentIndex].fuelRate))
 	print("fuelLevel: " + str(vehicleData[currentIndex].fuelLevel))
 	print("MAF: " + str(vehicleData[currentIndex].maf))
-	print("Distance: " + str(calculateDistanceTraveled(currentIndex)))
+	print("Distance: " + str(calculateDistanceTraveled()))
 	print("MPG: " + str(calculateMPGFromIndex(currentIndex)))
 	print("RPM: " + str(vehicleData[currentIndex].rpm.value.magnitude))
 
