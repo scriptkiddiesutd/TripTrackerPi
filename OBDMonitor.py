@@ -117,31 +117,33 @@ lastQueryTime = time.time()
 firstDTCSeen = connection.query(obd.commands.DISTANCE_SINCE_DTC_CLEAR)
 
 while True:
-	# ugly code is best code
-	speed = connection.query(obd.commands.SPEED)
-	maf = connection.query(obd.commands.MAF)
-	vehicleData.insert(currentIndex, InstantData(elapsedSeconds, connection.query(obd.commands.FUEL_LEVEL),
-	                                             speed, calculateMPG(maf.value.magnitude, speed.value.magnitude),
-	                                             connection.query(obd.commands.RPM), maf,
-	                                             connection.query(obd.commands.DISTANCE_SINCE_DTC_CLEAR),
-	                                             connection.query(obd.commands.COOLANT_TEMP)))
+	# only logs data if rpm > 10
+	if connection.query(obd.commands.RPM.value.magnitude) > 10:
+		# ugly code is best code
+		speed = connection.query(obd.commands.SPEED)
+		maf = connection.query(obd.commands.MAF)
+		vehicleData.insert(currentIndex, InstantData(elapsedSeconds, connection.query(obd.commands.FUEL_LEVEL),
+		                                             speed, calculateMPG(maf.value.magnitude, speed.value.magnitude),
+		                                             connection.query(obd.commands.RPM), maf,
+		                                             connection.query(obd.commands.DISTANCE_SINCE_DTC_CLEAR),
+		                                             connection.query(obd.commands.COOLANT_TEMP)))
 
-	# print data
-	print("elapsedSeconds: " + str(vehicleData[currentIndex].elapsedSeconds))
-	# print("fuelRateGPH: " + str(vehicleData[currentIndex].fuelRate))
-	print("fuelLevel: " + str(vehicleData[currentIndex].fuelLevel))
-	print("MAF: " + str(vehicleData[currentIndex].maf))
-	print("Distance: " + str(calculateDistanceTraveled()))
-	print("MPG: " + str(calculateMPGFromIndex(currentIndex)))
-	print("RPM: " + str(vehicleData[currentIndex].rpm.value.magnitude))
+		# print data
+		print("elapsedSeconds: " + str(vehicleData[currentIndex].elapsedSeconds))
+		# print("fuelRateGPH: " + str(vehicleData[currentIndex].fuelRate))
+		print("fuelLevel: " + str(vehicleData[currentIndex].fuelLevel))
+		print("MAF: " + str(vehicleData[currentIndex].maf))
+		print("Distance: " + str(calculateDistanceTraveled()))
+		print("MPG: " + str(calculateMPGFromIndex(currentIndex)))
+		print("RPM: " + str(vehicleData[currentIndex].rpm.value.magnitude))
 
-	elapsedSeconds += time.time() - lastQueryTime
-	currentIndex += 1
-	lastQueryTime = time.time()
+		elapsedSeconds += time.time() - lastQueryTime
+		currentIndex += 1
+		lastQueryTime = time.time()
 
-	# every 5th iteration, send the data to the server
-	if currentIndex - lastIndexSent >= 5:
-		post_data()
+		# every 5th iteration, send the data to the server
+		if currentIndex - lastIndexSent >= 5:
+			post_data()
 
 	# delay
 	time.sleep(querySpeed)
